@@ -23,17 +23,18 @@ def dataIntoWords(data):
 		data = data.replace(char, '')
 	return data.split()
 
+def printPositionalArray(posInd): #dic to be printed on std output and n is the "n"gram. So 1 for unigram, 2 for bigram...
+		
+	print( '{:<25s} {}'.format("Token", "Document and Positions") )
+	for word in posInd:
+		
+		print('{:<25s}'.format(word))
+		
+		for file in posInd[word]:
+			print('{:<25s}'.format(''), '{:<10s}'.format(file), posInd[word][file],'\n')
 
-
+		print()
 posInd = {}
-
-def printDict(dict): #ngram to be printed on std output and n is the "n"gram. So 1 for unigram, 2 for bigram...
-		
-	print( '{:<40s} {}'.format("Token","Positions") )
-	for c in dict:
-		
-		print('{:<40s}'.format(c), dict[c])
-
 
 	# make a dictionary with a dictionary in it. the dict( key, dict2). dict2 key will be the file number and the key will be the list in there.
 for x in filenames: #for each file
@@ -43,13 +44,14 @@ for x in filenames: #for each file
 		##words = nltk.word_tokenize(data)	
 		words = dataIntoWords(data)
 			
-		for i in range(len(words)):
+		for index in range(len(words)):
+			word = words[index]
 			
-			posInd.setdefault(words[i], [])
-			posInd[words[i]].append(i)
+			posInd.setdefault(word, {})
+			posInd[word].setdefault(x, [])
+			posInd[word][x].append(index)
 			
-printDict(posInd)
-		##print( words )
-		
+printPositionalArray(posInd)
+		 
 		
 		
