@@ -1,6 +1,7 @@
 
 import os
 import sys
+import datetime
 ##import nltk
 
 if len(sys.argv) < 2:
@@ -76,7 +77,7 @@ posInd = {}
 
 	# make a dictionary with a dictionary in it. the dict( key, dict2). dict2 key will be the file number and the key will be the list in there.
 for x in filenames: #for each file
-	with open(corLocation+ "\\" + x, "r") as openedFile:#opens the file and closes it when its done using it.
+	with open(corLocation+ "\\" + x, "r", encoding="utf8") as openedFile:#opens the file and closes it when its done using it.
 		data = openedFile.read() #copy the data
 		## normalize
 		##words = nltk.word_tokenize(data)	
@@ -89,7 +90,9 @@ for x in filenames: #for each file
 			posInd[word].setdefault(x, [])
 			posInd[word][x].append(index)
 			
-printPositionalArray(posInd)
+		
+print(datetime.datetime.now())		
+#printPositionalArray(posInd)
 #res = proxIntersect('this', 'hope', 1)
 #print(res);
 
