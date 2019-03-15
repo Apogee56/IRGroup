@@ -208,12 +208,10 @@ def queryParser(phraseQ):
         phraseQ = phraseQ.split()
         str = phraseQ[1]
         phraseQ[1] = Search_number_String(phraseQ[1])
-        print(phraseQ)
         answer = proxIntersect(phraseQ[0], phraseQ[2], int(phraseQ[1]))
         return answer
     else:
         answer = phraseQuery(phraseQ)
-        print(answer)
         return answer
 
 #Testing
