@@ -49,12 +49,13 @@ def proxIntersect(p1,p2,k): #implements the proximity query algorithm provided i
         #The function takes a term p1, a term p2, and a distance k that must be satisfied.
 		#This implementation is essentially faithful to the psuedocode except that it returns the output in a slightly different format.
 		#Exits with empty result if a query term is not in the index
+		result = {}
 		if posInd.get(p1) == None or posInd.get(p2) == None:
 			print("No results found")
 			return result
 		len_p1 = len(posInd[p1])
 		len_p2 = len(posInd[p2])
-		result = {}
+		
 		docs = []
 		
 		for i in posInd[p1].keys():
