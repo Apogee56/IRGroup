@@ -106,25 +106,34 @@ public class DocumentIndexing {
       // code here for processing one Bibliography record at a time
       Boolean flag = true, exitdoc = false;
       String current = "";
+      int count = 0;
       while(flag)
       {
     	  //breaks the loop when nothing remains
     	  current = br.readLine();
     	  
-    	  if (current == null || current.equals(""))
+    	  if (current == null)
     	  {
     		  flag = false; continue;
     	  }
+    	  else if(current.equals(""))
+    	  {
+    		  
+    	  }
     	  //Getting into this if statement implies there is a whole valid bibtex bibliography to parse.
-    	  if (current.charAt(0) == '@')
+    	  else if (current.charAt(0) == '@')
     	  {
     		  Document doc = new Document();
+    		 
+    		  count++;
     		  String doctype = current.substring(1,current.indexOf("{"));
     		  String bibkey = current.substring(current.indexOf("{") + 1, current.lastIndexOf(","));
     		  doc.add(new StringField("bibkey", bibkey, Field.Store.YES));
     		  doc.add(new StringField("doctype", doctype, Field.Store.YES));
+    		  System.out.println("Indexing Document " + count + " " + bibkey);
     		  
     		  //Here, the parsing of the nonkey fields is done by checking the curly braces on each line.
+    		  exitdoc = false;
     		  while(!exitdoc)
     		  {		
     			  current = br.readLine();
@@ -139,9 +148,10 @@ public class DocumentIndexing {
     			  // CASE 1 ==========  A normal field is detected (all on one line, start and end delimiters in proper places.
     			  if(current.indexOf("{") < current.indexOf("}") && current.indexOf("{") > -1)
     			  {
-    				  System.out.println(current + "" + current.indexOf("{") + "" + current.indexOf("}"));
+    				  //System.out.println(current + "" + current.indexOf("{") + "" + current.indexOf("}"));
     				  String field = current.substring(1, current.indexOf(" = "));
     				  String contents = current.substring(current.indexOf("{") + 1, current.indexOf("}"));
+    				  System.out.println("Adding Field: " + field);
     				  
     				  //A special case is needed to parse the author field, since that area must be parsed into multiple identical field entries.
     				  if(field.equalsIgnoreCase("author"))
@@ -153,14 +163,7 @@ public class DocumentIndexing {
     						  doc.add(new TextField("author", temp, Field.Store.YES));
     					  }
     				  }
-    				  //A special case is given to parse the pages field, since that area can be parsed into two int entries.
-    				  else if(field.equalsIgnoreCase("pages"))
-    				  {
-    					  String [] pages = contents.split("--");
-    					  
-    					  doc.add(new IntPoint("pages", Integer.parseInt(pages[0]), Integer.parseInt(pages[1])));
-    					  
-    				  }
+    				 
     				  //A special case is needed to parse the keywords field, since that area must be parsed into multiple identical field entries.
     				  else if(field.equalsIgnoreCase("keywords"))
     				  {
@@ -224,7 +227,7 @@ public class DocumentIndexing {
       }
 
       // assuming that values for various fields have been extracted  
-
+      /*
       // create a Lucene document
       Document doc = new Document();  
 
@@ -277,8 +280,9 @@ public class DocumentIndexing {
 
       // index the document
       writer.addDocument(doc);  
-
+		*/
       writer.close();
+      System.out.println("Index Successfully Created");
     }
     catch(IOException e){
       System.out.println(" Caught a " + e.getClass() + "\n with message: " + e.getMessage());
