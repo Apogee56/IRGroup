@@ -23,6 +23,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -39,6 +40,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import java.io.*;
 
 public class DocumentIndexing {
 
@@ -52,6 +54,8 @@ public class DocumentIndexing {
 
     System.out.println("Correct usage: java DocumentIndexing [-index <path-to-lucene-index>] [-update]");
 
+    //Parses the bibliography file location from the commandline
+    File file = new File(args[args.length - 1]);
     // default index path, if the user does not provide one
     String indexPath = "indexDir";
 
@@ -97,8 +101,127 @@ public class DocumentIndexing {
 
       IndexWriter writer = new IndexWriter(dir, iwc); 
 
+      
+      BufferedReader br = new BufferedReader(new FileReader(file));
       // code here for processing one Bibliography record at a time
-      // using a loop 
+      Boolean flag = true, exitdoc = false;
+      String current = "";
+      while(flag)
+      {
+    	  //breaks the loop when nothing remains
+    	  current = br.readLine();
+    	  
+    	  if (current == null || current.equals(""))
+    	  {
+    		  flag = false; continue;
+    	  }
+    	  //Getting into this if statement implies there is a whole valid bibtex bibliography to parse.
+    	  if (current.charAt(0) == '@')
+    	  {
+    		  Document doc = new Document();
+    		  String doctype = current.substring(1,current.indexOf("{"));
+    		  String bibkey = current.substring(current.indexOf("{") + 1, current.lastIndexOf(","));
+    		  doc.add(new StringField("bibkey", bibkey, Field.Store.YES));
+    		  doc.add(new StringField("doctype", doctype, Field.Store.YES));
+    		  
+    		  //Here, the parsing of the nonkey fields is done by checking the curly braces on each line.
+    		  while(!exitdoc)
+    		  {		
+    			  current = br.readLine();
+    			  /*
+    			  while(current != null)
+    			  {
+    				  System.out.println(current);
+    				  current = br.readLine();
+    			  }
+    			  */
+				  //System.out.println(current);
+    			  // CASE 1 ==========  A normal field is detected (all on one line, start and end delimiters in proper places.
+    			  if(current.indexOf("{") < current.indexOf("}") && current.indexOf("{") > -1)
+    			  {
+    				  System.out.println(current + "" + current.indexOf("{") + "" + current.indexOf("}"));
+    				  String field = current.substring(1, current.indexOf(" = "));
+    				  String contents = current.substring(current.indexOf("{") + 1, current.indexOf("}"));
+    				  
+    				  //A special case is needed to parse the author field, since that area must be parsed into multiple identical field entries.
+    				  if(field.equalsIgnoreCase("author"))
+    				  {
+    					  String [] authors = contents.split(" and ");
+    					  for(int i = 0; i < authors.length; i++)
+    					  {
+    						  String temp = authors[i];
+    						  doc.add(new TextField("author", temp, Field.Store.YES));
+    					  }
+    				  }
+    				  //A special case is given to parse the pages field, since that area can be parsed into two int entries.
+    				  else if(field.equalsIgnoreCase("pages"))
+    				  {
+    					  String [] pages = contents.split("--");
+    					  
+    					  doc.add(new IntPoint("pages", Integer.parseInt(pages[0]), Integer.parseInt(pages[1])));
+    					  
+    				  }
+    				  //A special case is needed to parse the keywords field, since that area must be parsed into multiple identical field entries.
+    				  else if(field.equalsIgnoreCase("keywords"))
+    				  {
+    					  String [] keywords = contents.split(" ");
+    					  for(int i = 0; i < keywords.length; i++)
+    					  {
+    						  String temp = keywords[i];
+    						  doc.add(new TextField("keywords", temp, Field.Store.YES));
+    					  }
+    				  }
+    				  //A general case that takes a field and stores it as text verbatim.
+    				  else
+    				  {
+    					  doc.add(new TextField(field, contents, Field.Store.YES));
+    				  }
+    				  
+    			  }
+    			  // CASE 2 ==========  An abnormal field which ultimately has proper delimiters but is not stored entirely on one line.
+    			  else if (current.indexOf("{") > -1 && current.indexOf("}") == -1)
+    			  {
+    				  String field = current.substring(1, current.indexOf(" = "));
+    				  String holder = current.substring(current.indexOf("{") + 1);
+    				  boolean endfield = false;
+    				  
+    				  //Collects the scattered contents of the field.
+    				  while(!endfield)
+    				  {
+    					  current = br.readLine();
+    					  //If the current line has an end bracket in it (in this if path), then we are ending the contents
+    					  if(current.indexOf("}") > -1)
+    					  {
+    						  current = current.substring(0, current.indexOf("}"));
+    						  holder = holder + current;
+    						  endfield = true;
+    					  }
+    					  //If it does not contain the end bracket, then we must add the current line to our holder for the field.
+    					  else
+    					  {
+    						  holder = holder + current;
+    					  }
+    				  }
+    				  
+    				  //Escaping the prior loop implies we now have both a field and a content of that field to add, however mangled it may be.
+    				  //Adding it as a TextField
+    				  
+    				  doc.add(new TextField(field, holder, Field.Store.YES));
+    				    
+    			  }
+    			  // CASE 3 ==========  A lone ending bracket is found on the line at the 0th index. This implies the end of a document.
+    			  // No more fields to add, just writing this document to the index and exiting the document.
+    			  // It's not an else statement because "There is more in Heaven and Earth, Horatio, than exists in your philosophy."
+    			  else if (current.indexOf("}") == 0)
+    			  {
+    				  exitdoc = true;
+    				  writer.addDocument(doc);
+    			  }
+    		  }
+    		  
+    	  }
+    	  
+      }
 
       // assuming that values for various fields have been extracted  
 
