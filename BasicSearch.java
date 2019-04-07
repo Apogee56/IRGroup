@@ -203,7 +203,7 @@ public class BasicSearch {
 
 	
 	// Prefix Query
-	private void UsePhraseQuery(String contents, String theSearch)throws IOException, ParseException
+	private void UseMultiPhraseQuery(String contents, String theSearch)throws IOException, ParseException
 	{
 		try 
 		{
@@ -234,7 +234,7 @@ public class BasicSearch {
 	}
 
 	// MultiPhrase query
-	private void UsePhraseQuery(Terms[] terms)throws IOException, ParseException
+	private void UseMultiPhraseQuery(Terms[] terms)throws IOException, ParseException
 	{
 		//Do search
 		MultiPhraseQuery.Builder queryB = new MultiPhraseQuery.Builder();
@@ -242,11 +242,43 @@ public class BasicSearch {
 		{	
 			queryB.add(terms[i])
 		}
-		return queryB.build();
+		TopDocs corpus = queryB.build();
+		ScoreDoc[] resultSet = topDocs.scoreDocs;
+
+		//print results
+		int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
+      	System.out.println("\nResult set size (Phrase query): " + resultSetSize);
+
+	    for (int i = 0; i < resultSetSize; i++)
+		{
+        	System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
+	    }
+		reader.close();
    	}
 
 
-	
+	// MatchAllDocsQuery
+	private void UseMatchAllDocsQuery(String theSearch)throws IOException, ParseException
+	{
+		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
+      	IndexSearcher searcher = new IndexSearcher(reader);
+      	Analyzer analyzer = new StandardAnalyzer();
+
+		//Searching
+		Query query = new MatchAllDocsQuery(theSearch);
+		TopDocs corpus = searcher.search(query);
+		ScoreDoc[] resultSet = topDocs.scoreDocs;
+
+		//print results
+    	int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
+      	System.out.println("\nResult set size (Phrase query): " + resultSetSize);
+
+	    for (int i = 0; i < resultSetSize; i++)
+		{
+        	System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
+	    }
+		reader.close();
+	}
 
 
 }
