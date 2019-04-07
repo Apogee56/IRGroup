@@ -143,7 +143,7 @@ public class BasicSearch {
     		IndexSearcher searcher = new IndexSearcher(reader);
 	      	Analyzer analyzer = new StandardAnalyzer();
 
-			Query query = new WildcardQuery(new Term(contents, "prefer*"));
+			Query query = new WildcardQuery(new Term(contents, "exampl*"));
 			TopDocs topDocs = searcher.search(query, 10, Sort.INDEXORDER);
       	
       		System.out.println("Total matches: " + topDocs.totalHits);
@@ -234,5 +234,19 @@ public class BasicSearch {
 	}
 
 	// MultiPhrase query
+	private void UsePhraseQuery(Terms[] terms)throws IOException, ParseException
+	{
+		//Do search
+		MultiPhraseQuery.Builder queryB = new MultiPhraseQuery.Builder();
+		for(i = 0; i < terms.length; i++)
+		{	
+			queryB.add(terms[i])
+		}
+		return queryB.build();
+   	}
+
+
+	
+
 
 }
