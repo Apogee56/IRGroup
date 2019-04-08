@@ -47,8 +47,6 @@ public class BasicSearch {
     System.out.println("Lucene index directory: " + indexDirName);
 
     // Term query
-	private void UseTermQuery(String contents, String theSearch)throws IOException, ParseException 
-	{
     	try 
 		{
      		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
@@ -56,7 +54,7 @@ public class BasicSearch {
       		Analyzer analyzer = new StandardAnalyzer();
 
 			//Do search
-      		Term term = new Term(contents, theSearch);
+      		Term term = new Term("contents", "leaves");
       		Query query = new TermQuery(term);
       		TopDocs topDocs = searcher.search(query, MAX_DOCS);
       		System.out.println("\nTotal matches: " + topDocs.totalHits);
@@ -76,7 +74,7 @@ public class BasicSearch {
 		{
      		e.printStackTrace();
    	 	}
-	}
+
 
 
     // Boolean query
@@ -133,7 +131,7 @@ public class BasicSearch {
       		e.printStackTrace();
     	}
 	}
-
+/*
 	// WildCard query
 	private void UseWildCardQuery(String contents, String theSearch)throws IOException, ParseException
 	{ 
@@ -232,7 +230,7 @@ public class BasicSearch {
       		e.printStackTrace();
     	}
 	}
-
+/*
 	// MultiPhrase query
 	private void UseMultiPhraseQuery(Terms[] terms)throws IOException, ParseException
 	{
@@ -278,6 +276,12 @@ public class BasicSearch {
         	System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
 	    }
 		reader.close();
+	}
+
+	// DisjunctionMaxQuery
+	private void DisjunctionMaxQuery(String theSearch)throws IOException, ParseException
+	{
+		
 	}
 
 
