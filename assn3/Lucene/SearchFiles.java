@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
-
+import java.util.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -46,16 +46,15 @@ public class SearchFiles {
   /** simple command-line based search demo */
 public static void main(String[] args) throws Exception{
     String usage =
-      "Usage:\tjava org.apache.lucene.demo.SearchFiles [-index dir] [-field f] [-repeat n] [-queries file] [-query string] [-raw] [-paging hitsPerPage]\n\nSee http://lucene.apache.org/core/4_1_0/demo/ for details.";
+      "Usage:\tjava org.apache.lucene.demo.SearchFiles [-index dir]";
     if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
       System.out.println(usage);
       System.exit(0);
     }
 
+    String defaultField = "title";
     String index = "index";
-    String field = "contents";
     String queries = null;
-    int repeat = 0;
     boolean raw = false;
     String queryString = null;
     int hitsPerPage = 10;
@@ -63,18 +62,6 @@ public static void main(String[] args) throws Exception{
     for(int i = 0; i < args.length; i++) {
       if ("-index".equals(args[i])) {
         index = args[i+1];
-        i++;
-      } else if ("-field".equals(args[i])) {
-        field = args[i+1];
-        i++;
-      } else if ("-queries".equals(args[i])) {
-        queries = args[i+1];
-        i++;
-      } else if ("-query".equals(args[i])) {
-        queryString = args[i+1];
-        i++;
-      } else if ("-repeat".equals(args[i])) {
-        repeat = Integer.parseInt(args[i+1]);
         i++;
       } else if ("-raw".equals(args[i])) {
         raw = true;
@@ -91,42 +78,28 @@ public static void main(String[] args) throws Exception{
     IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
     IndexSearcher searcher = new IndexSearcher(reader);
     Analyzer analyzer = new StandardAnalyzer();
-
-    BufferedReader in = null;
-    if (queries != null) {
-      in = Files.newBufferedReader(Paths.get(queries), StandardCharsets.UTF_8);
-    } else {
-      in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-    }
-    QueryParser parser = new QueryParser(field, analyzer);
+    BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+    
+    
     while (true) {
-      if (queries == null && queryString == null) {       // prompt the user
-        System.out.println("Enter query: ");
-      }
-
-      String line = queryString != null ? queryString : in.readLine();
-
-      if (line == null || line.length() == -1) {
-        break;
-      }
-
-      line = line.trim();
-      if (line.length() == 0) {
-        break;
-      }
+    	
+      queryString = getQuery();
+      //System.out.println(queryString);
+      String field = defaultField;
       
-      Query query = parser.parse(line);
+      System.out.println("Search in a specific field? Otherwise will use default field " + field + " (y,n)");
+      String opt = in.readLine();
+      if(opt.toLowerCase().equals("y"))
+      {
+        System.out.println("Please enter a specific field: ");
+      	field = in.readLine().toLowerCase();
+      }
+
+      QueryParser parser = new QueryParser(field, analyzer);
+      Query query = parseQuery(queryString, parser);
+      
       System.out.println("Searching for: " + query.toString(field));
             
-      if (repeat > 0) {                           // repeat & time as benchmark
-        Date start = new Date();
-        for (int i = 0; i < repeat; i++) {
-          searcher.search(query, 100);
-        }
-        Date end = new Date();
-        System.out.println("Time: "+(end.getTime()-start.getTime())+"ms");
-      }
-
       doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
 
       if (queryString != null) {
@@ -135,7 +108,156 @@ public static void main(String[] args) throws Exception{
     }
     reader.close();
   }
+	
+  /*
+   * This function allows the user to provide a query type and returns the query they chose.
+   */
+	
+	public static Query parseQuery(String queryString, QueryParser defParse) 
+	{
+		Query res = null;
+		String query = "", contents = "";
+		
+		if(queryString.indexOf("{") == -1)
+		{
+			//System.out.println(queryString);
+			query = queryString.substring(0, queryString.indexOf(";"));
+			contents = queryString.substring(queryString.indexOf(";") + 1, queryString.indexOf(";;"));
+		}
+		else 
+		{
+			query = queryString.substring(0, queryString.indexOf("{"));
+			contents = queryString.substring(queryString.indexOf("{") + 1, queryString.lastIndexOf("}"));
+		}
+		try
+		{
+			switch (query)
+			{
+			  	case "TermQuery":
+			  	case "BooleanQuery":
+			  	case "WildcardQuery":
+			  	case "PhraseQuery":
+			  	case "PrefixQuery":
+			  	case "FuzzyQuery":
+			  		res = defParse.parse(contents);
+			  		return res;
+			  	case "MultiPhraseQuery":
+			  		res = null;
+			  		return res;
+			  	case "RegexpQuery":
+			  		res = null;
+			  		return res;
+			  	case "TermRangeQuery":
+			  		res = null;
+			  		return res;
+			  	case "DisjunctionMaxQuery":
+			  		res = null;
+			  		return res;
+			  	case "MatchAllDocsQuery":
+			  		res = null;
+			  		return res;
+			  	default:
+			  		System.out.println("Error: Unable to parse query " + query);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Error: Unable to parse query " + query);
+		}
+		//This return only activates when a query cannot be parsed.
+		return res;
 
+	}
+
+  /*
+   * This function allows the user to provide a query type and returns the query they chose.
+   */
+
+  public static String getQuery() {
+	  
+	  String res = "";
+	  int opt = -1;
+	  Scanner kbd = new Scanner(System.in);
+	  System.out.println("Please enter the integer for the type of query you want to run.");
+	  System.out.println("Options are: 1. TermQuery, 2. BooleanQuery, 3. WildcardQuery, 4. PhraseQuery, 5. PrefixQuery, 6. MultiPhraseQuery, 7. FuzzyQuery, 8. RegexpQuery, 9. TermRangeQuery, 10. DisjunctionMaxQuery, 11. MatchAllDocsQuery.");
+	  opt = kbd.nextInt();
+	  
+	  while(opt >= 1 || opt <= 11)
+	  {
+		  
+		  switch (opt)
+		  {
+		  	case 1:
+		  		res = "TermQuery;";
+		  		System.out.println("Please enter a single search term: ");
+		  		res = res + kbd.next() + ";;";
+		  		return res;
+		  	case 2:
+		  		res = "BooleanQuery-";
+		  		System.out.println("Please enter a Boolean Query (Example: \"+data +computational -research: ):");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 3:
+		  		res = "WildcardQuery-";
+		  		System.out.println("Please enter a Wildcard Query Term (Examples: Rep*, *ment, co*er): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 4:
+		  		res = "PhraseQuery-";
+		  		System.out.println("Please enter a Phrase Query in quotes (Example: \"computational complexity\"): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 5:
+		  		res = "PrefixQuery-";
+		  		System.out.println("Please enter a Prefix Query Term (Example: Rep*): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 6:
+		  		res = "MultiPhraseQuery-";
+		  		System.out.println("Please enter a MultiPhrase Query in quotes (Example: Rep*): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 7:
+		  		res = "FuzzyQuery-";
+		  		System.out.println("Please enter a Fuzzy Query (Example: Nature~): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 8:
+		  		res = "RegexpQuery-";
+		  		System.out.println("Please enter a regular expression (Example: Nature~): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 9:
+		  		res = "TermRangeQuery-";
+		  		System.out.println("Please enter two terms for a range (Example: nature nurture): ");
+		  		res = res + kbd.nextLine() + ";;";
+		  		return res;
+		  	case 10:
+		  		res = "DisjunctionMaxQuery{";
+		  		System.out.println("Please enter the number of queries you want to perform:");
+		  		int numQ = kbd.nextInt();
+		  		for(int i = 0; i < numQ; i++)
+		  		{
+		  			System.out.println("Queries left: " + (numQ-i));
+		  			res = res + getQuery();
+		  		}
+		  		res = res + "}";
+		  		return res;
+		  	case 11:
+		  		res = "MatchAllDocsQuery-";
+		  		System.out.println("Please enter a single search term: ");
+		  		res = res + kbd.next() + ";;";
+		  		return res;
+		  	default:
+		  		System.out.println("Error: Please choose a number representing one of the above query types.");
+		  }
+	  }
+	  
+	  
+	  //Only returns here if severe error occurs.
+	  return null;
+  }
+  
   /**
    * This demonstrates a typical paging search scenario, where the search engine presents 
    * pages of size n to the user. The user can then go to the next page if interested in
@@ -180,16 +302,8 @@ public static void main(String[] args) throws Exception{
         }
 
         Document doc = searcher.doc(hits[i].doc);
-        String path = doc.get("path");
-        if (path != null) {
-          System.out.println((i+1) + ". " + path);
-          String title = doc.get("title");
-          if (title != null) {
-            System.out.println("   Title: " + doc.get("title"));
-          }
-        } else {
-          System.out.println((i+1) + ". " + "No path for this document");
-        }
+        String bibkey = doc.get("bibkey");
+        System.out.println((i+1) + ". " + bibkey);
                   
       }
 
