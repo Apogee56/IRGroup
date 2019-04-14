@@ -156,10 +156,11 @@ public static void main(String[] args) throws Exception{
 					res = queryB.build();
 			  		return res;
 			  	case "RegexpQuery":
-			  		res = null;
+			  		res = new RegexpQuery(new Term(field, contents));
 			  		return res;
 			  	case "TermRangeQuery":
-			  		res = null;
+			  		String [] terms2 = contents.toLowerCase().split(" ");
+			  		res = TermRangeQuery.newStringRange(field, terms2[0] ,terms2[1] ,true,false);
 			  		return res;
 			  	case "DisjunctionMaxQuery":
 			  		res = null;
@@ -237,7 +238,7 @@ public static void main(String[] args) throws Exception{
 		  		return res;
 		  	case 8:
 		  		res = "RegexpQuery;";
-		  		System.out.println("Please enter a regular expression (Example: Nature~): ");
+		  		System.out.println("Please enter a regular expression: ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 9:
