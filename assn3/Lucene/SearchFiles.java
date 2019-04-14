@@ -32,7 +32,8 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.*;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
@@ -95,7 +96,7 @@ public static void main(String[] args) throws Exception{
       }
       System.out.println(queryString);
       QueryParser parser = new QueryParser(field, analyzer);
-      Query query = parseQuery(queryString, parser);
+      Query query = parseQuery(queryString, parser, field);
       
       System.out.println("Searching for: " + query.toString(field));
             
@@ -117,7 +118,7 @@ public static void main(String[] args) throws Exception{
    * This function allows the user to provide a query type and returns the query they chose.
    */
 	
-	public static Query parseQuery(String queryString, QueryParser defParse) 
+	public static Query parseQuery(String queryString, QueryParser defParse, String field) 
 	{
 		Query res = null;
 		String query = "", contents = "";
@@ -146,7 +147,13 @@ public static void main(String[] args) throws Exception{
 			  		res = defParse.parse(contents);
 			  		return res;
 			  	case "MultiPhraseQuery":
-			  		res = null;
+			  		MultiPhraseQuery.Builder queryB = new MultiPhraseQuery.Builder();
+			  		String [] terms = contents.toLowerCase().split(" ");
+					for(int i = 0; i < terms.length; i++)
+					{	
+						queryB.add(new Term(field, terms[i]));
+					}
+					res = queryB.build();
 			  		return res;
 			  	case "RegexpQuery":
 			  		res = new RegexpQuery(new Term(field, contents));
@@ -159,7 +166,7 @@ public static void main(String[] args) throws Exception{
 			  		res = null;
 			  		return res;
 			  	case "MatchAllDocsQuery":
-			  		res = null;
+			  		res = new MatchAllDocsQuery();
 			  		return res;
 			  	default:
 			  		System.out.println("Error: Unable to parse query " + query);
@@ -221,7 +228,7 @@ public static void main(String[] args) throws Exception{
 		  		return res;
 		  	case 6:
 		  		res = "MultiPhraseQuery;";
-		  		System.out.println("Please enter a MultiPhrase Query in quotes (Example: Rep*): ");
+		  		System.out.println("Please enter a MultiPhrase Query  (Example: computational complexity): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 7:
@@ -252,8 +259,8 @@ public static void main(String[] args) throws Exception{
 		  		return res;
 		  	case 11:
 		  		res = "MatchAllDocsQuery;";
-		  		System.out.println("Please enter a single search term: ");
-		  		res = res + kbd.next() + ";;";
+		  		System.out.println("Running a MatchAllDocs Query");
+		  		res = res + ";;";
 		  		return res;
 		  	default:
 		  		System.out.println("Error: Please choose a number representing one of the above query types.");
