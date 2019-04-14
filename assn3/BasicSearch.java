@@ -213,52 +213,66 @@ public class BasicSearch {
 	// MultiPhrase query
 	private void UseMultiPhraseQuery(Terms[] terms)throws IOException, ParseException
 	{
-		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
-      	IndexSearcher searcher = new IndexSearcher(reader);
-      	Analyzer analyzer = new StandardAnalyzer();
-
-		//Do search
-		MultiPhraseQuery.Builder queryB = new MultiPhraseQuery.Builder();
-		for(i = 0; i < terms.length; i++)
-		{	
-			queryB.add(terms[i])
-		}
-		TopDocs corpus = queryB.build();
-		ScoreDoc[] resultSet = topDocs.scoreDocs;
-
-		//print results
-		int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
-      	System.out.println("\nResult set size (Phrase query): " + resultSetSize);
-
-	    for (int i = 0; i < resultSetSize; i++)
+		try
 		{
-        	System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
-	    }
-		reader.close();
+			IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
+      		IndexSearcher searcher = new IndexSearcher(reader);
+      		Analyzer analyzer = new StandardAnalyzer();
+
+			//Do search
+			MultiPhraseQuery.Builder queryB = new MultiPhraseQuery.Builder();
+			for(i = 0; i < terms.length; i++)
+			{	
+				queryB.add(terms[i])
+			}
+			TopDocs corpus = queryB.build();
+			ScoreDoc[] resultSet = topDocs.scoreDocs;
+
+			//print results
+			int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
+      		System.out.println("\nResult set size (Phrase query): " + resultSetSize);
+
+	    	for (int i = 0; i < resultSetSize; i++)
+			{
+        		System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
+	    	}
+			reader.close();
+		}
+		catch(IOException e) 
+		{
+      		e.printStackTrace();
+    	}
    	}
 
 
 	// MatchAllDocsQuery
 	private void UseMatchAllDocsQuery(String theSearch)throws IOException, ParseException
 	{
-		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
-      	IndexSearcher searcher = new IndexSearcher(reader);
-      	Analyzer analyzer = new StandardAnalyzer();
-
-		//Searching
-		Query query = new MatchAllDocsQuery(theSearch);
-		TopDocs corpus = searcher.search(query);
-		ScoreDoc[] resultSet = topDocs.scoreDocs;
-
-		//print results
-    	int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
-      	System.out.println("\nResult set size (Phrase query): " + resultSetSize);
-
-	    for (int i = 0; i < resultSetSize; i++)
+		try
 		{
-        	System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
-	    }
-		reader.close();
+			IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
+      		IndexSearcher searcher = new IndexSearcher(reader);
+      		nalyzer analyzer = new StandardAnalyzer();
+
+			//Searching
+			Query query = new MatchAllDocsQuery(theSearch);
+			TopDocs corpus = searcher.search(query);
+			ScoreDoc[] resultSet = topDocs.scoreDocs;
+
+			//print results
+    		int resultSetSize = Math.min(MAX_DOCS, Math.toIntExact(topDocs.totalHits));
+      		System.out.println("\nResult set size (Phrase query): " + resultSetSize);
+
+	    	for (int i = 0; i < resultSetSize; i++)
+			{
+        		System.out.println("Document = " + resultSet[i].doc + "\t" + " Score=" + resultSet[i].score);
+	    	}
+			reader.close();
+		}
+		catch(IOException e) 
+		{
+      		e.printStackTrace();
+    	}
 	}
 
 }
