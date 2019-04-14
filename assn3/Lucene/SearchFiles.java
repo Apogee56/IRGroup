@@ -54,7 +54,6 @@ public static void main(String[] args) throws Exception{
 
     String defaultField = "title";
     String index = "index";
-    String queries = null;
     boolean raw = false;
     String queryString = null;
     int hitsPerPage = 10;
@@ -94,20 +93,25 @@ public static void main(String[] args) throws Exception{
         System.out.println("Please enter a specific field: ");
       	field = in.readLine().toLowerCase();
       }
-
+      System.out.println(queryString);
       QueryParser parser = new QueryParser(field, analyzer);
       Query query = parseQuery(queryString, parser);
       
       System.out.println("Searching for: " + query.toString(field));
             
-      doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
-
-      if (queryString != null) {
+      doPagingSearch(in, searcher, query, hitsPerPage, raw, true);
+      
+      System.out.println("\nPerform another query? (y/n)");
+      opt = in.readLine();
+      if(opt.toLowerCase().equals("n"))
+      {
         break;
       }
     }
+    
     reader.close();
-  }
+  
+}
 	
   /*
    * This function allows the user to provide a query type and returns the query they chose.
@@ -184,7 +188,9 @@ public static void main(String[] args) throws Exception{
 	  
 	  while(opt >= 1 || opt <= 11)
 	  {
-		  
+		  //Clears the scanner
+		  kbd.nextLine();
+		  String temp = "";
 		  switch (opt)
 		  {
 		  	case 1:
@@ -193,42 +199,42 @@ public static void main(String[] args) throws Exception{
 		  		res = res + kbd.next() + ";;";
 		  		return res;
 		  	case 2:
-		  		res = "BooleanQuery-";
+		  		res = "BooleanQuery;";
 		  		System.out.println("Please enter a Boolean Query (Example: \"+data +computational -research: ):");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 3:
-		  		res = "WildcardQuery-";
+		  		res = "WildcardQuery;";
 		  		System.out.println("Please enter a Wildcard Query Term (Examples: Rep*, *ment, co*er): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 4:
-		  		res = "PhraseQuery-";
+		  		res = "PhraseQuery;";
 		  		System.out.println("Please enter a Phrase Query in quotes (Example: \"computational complexity\"): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 5:
-		  		res = "PrefixQuery-";
+		  		res = "PrefixQuery;";
 		  		System.out.println("Please enter a Prefix Query Term (Example: Rep*): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 6:
-		  		res = "MultiPhraseQuery-";
+		  		res = "MultiPhraseQuery;";
 		  		System.out.println("Please enter a MultiPhrase Query in quotes (Example: Rep*): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 7:
-		  		res = "FuzzyQuery-";
+		  		res = "FuzzyQuery;";
 		  		System.out.println("Please enter a Fuzzy Query (Example: Nature~): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 8:
-		  		res = "RegexpQuery-";
+		  		res = "RegexpQuery;";
 		  		System.out.println("Please enter a regular expression (Example: Nature~): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
 		  	case 9:
-		  		res = "TermRangeQuery-";
+		  		res = "TermRangeQuery;";
 		  		System.out.println("Please enter two terms for a range (Example: nature nurture): ");
 		  		res = res + kbd.nextLine() + ";;";
 		  		return res;
@@ -244,7 +250,7 @@ public static void main(String[] args) throws Exception{
 		  		res = res + "}";
 		  		return res;
 		  	case 11:
-		  		res = "MatchAllDocsQuery-";
+		  		res = "MatchAllDocsQuery;";
 		  		System.out.println("Please enter a single search term: ");
 		  		res = res + kbd.next() + ";;";
 		  		return res;
@@ -255,7 +261,7 @@ public static void main(String[] args) throws Exception{
 	  
 	  
 	  //Only returns here if severe error occurs.
-	  return null;
+	  return res;
   }
   
   /**
