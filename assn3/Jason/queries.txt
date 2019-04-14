@@ -1,0 +1,84 @@
+	public static void regexpQuery(String index,int hitsPerPage, boolean raw, boolean interactive) throws Exception{
+		
+		System.out.println("Enter query: ");
+
+		BufferedReader in =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+
+		String query = in.readLine();
+
+		if (query == null || query.length() <= 0) {
+			System.out.print("no query found");
+			return;
+		}
+
+		
+		query = query.trim();
+		
+		System.out.println("Enter field");
+		
+		String field = in.readLine();
+
+		if (field == null || field.length() <= 0) {
+			System.out.println("no field found");
+		}
+
+		field = field.trim();
+		
+		RegexpQuery RegQ = new RegexpQuery(new Term(field, query));
+
+		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+
+		IndexSearcher searcher = new IndexSearcher(reader);
+
+		
+		doPagingSearch(in, searcher, RegQ, hitsPerPage, raw, interactive);
+
+				
+		reader.close();	
+
+	}
+	
+	
+	public static void termRangeQuery(String index,int hitsPerPage, boolean raw, boolean interactive) throws Exception{
+
+		System.out.println("Enter query range separated by a space: Example (minTerm maxTerm");
+
+		BufferedReader in =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+
+		String input = in.readLine();
+
+		String[] parts = input.split("\\s+");
+
+		if (input == null || input.length() <= 0) {
+			System.out.print("no proper query found");
+			return;
+		}
+
+		String min = parts[0];
+		String max;
+		if (parts.length ==1){
+			max = null;
+		}
+		else{
+			max = parts[1];
+		}
+
+		System.out.println("Enter field");
+
+		String field = in.readLine();
+
+		if (field == null || field.length() <= 0) {
+			System.out.println("no field found");
+		}
+
+		field = field.trim();
+
+		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+		IndexSearcher searcher = new IndexSearcher(reader);
+
+		//create the term query object
+		Query query = TermRangeQuery.newStringRange(field, min,max,true,false);
+		//do the search
+		doPagingSearch(in,  searcher,  query, hitsPerPage,  raw,  interactive);
+
+	}
