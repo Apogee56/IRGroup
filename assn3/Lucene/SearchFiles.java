@@ -127,7 +127,10 @@ public static void main(String[] args) throws Exception{
 		{
 			//System.out.println(queryString);
 			query = queryString.substring(0, queryString.indexOf(";"));
-			contents = queryString.substring(queryString.indexOf(";") + 1, queryString.indexOf(";;"));
+			if(query.contains("MatchAllDocs"))
+				contents = null;
+			else
+				contents = queryString.substring(queryString.indexOf(";") + 1, queryString.indexOf(";;"));
 		}
 		else 
 		{
