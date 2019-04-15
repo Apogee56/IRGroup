@@ -83,7 +83,7 @@ public static void main(String[] args) throws Exception{
     
     while (true) {
     	
-      queryString = getQuery();
+      
       //System.out.println(queryString);
       String field = defaultField;
       
@@ -94,6 +94,7 @@ public static void main(String[] args) throws Exception{
         System.out.println("Please enter a specific field: ");
       	field = in.readLine().toLowerCase();
       }
+      queryString = getQuery();
       System.out.println(queryString);
       QueryParser parser = new QueryParser(field, analyzer);
       Query query = parseQuery(queryString, parser, field);
@@ -166,7 +167,19 @@ public static void main(String[] args) throws Exception{
 			  		res = TermRangeQuery.newStringRange(field, terms2[0] ,terms2[1] ,true,false);
 			  		return res;
 			  	case "DisjunctionMaxQuery":
-			  		res = null;
+			  		ArrayList<Query> list = new ArrayList<Query>();
+					while(contents.lastIndexOf(";;") != -1){
+						
+						String tempCont = contents.substring(0, contents.indexOf(";;")+2);
+						contents = contents.substring(contents.indexOf(";;") + 2);
+						//System.out.println(tempCont);
+						//System.out.println(contents);
+						Query query2 = parseQuery(tempCont, defParse, field);
+
+						list.add(query2);
+
+					}
+					res = new DisjunctionMaxQuery(list, (float) .01);
 			  		return res;
 			  	case "MatchAllDocsQuery":
 			  		res = new MatchAllDocsQuery();
