@@ -119,3 +119,46 @@
 		
 
 	}
+	
+	public static void disjunctionMaxQuery(String index,int hitsPerPage, boolean raw, boolean interactive) throws Exception{
+
+		boolean quit = false;
+
+		BufferedReader in =  new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+
+		Analyzer analyzer = new StandardAnalyzer();
+
+		System.out.println("enter tieBreaker float");
+		float TB = Float.parseFloat(in.readLine());
+
+		ArrayList<Query> list = new ArrayList<Query>();
+		while(!quit){
+			System.out.println("enter one query. -1 if done");
+			String tempQ = in.readLine();
+
+			if(tempQ.equals("-1")){
+				quit = true;
+			}
+			else{
+				tempQ= tempQ.trim();
+				System.out.println("enter field");
+				String tempF = in.readLine().trim();
+
+				QueryParser parser = new QueryParser(tempF, analyzer);
+				Query query = parser.parse(tempQ);
+
+				list.add(query);
+			}
+		}
+		DisjunctionMaxQuery DMQuery = new DisjunctionMaxQuery(list, TB);
+
+		System.out.println(DMQuery);
+		
+		IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+
+		IndexSearcher searcher = new IndexSearcher(reader);
+
+		doPagingSearch(in, searcher, DMQuery, hitsPerPage, raw, interactive);
+
+		
+	}
